@@ -1,0 +1,152 @@
+{% extends "issues/base.html" %}
+{% block title %}All Issues{% endblock %}
+{% block page_heading %}Current City Issues{% endblock %}
+
+{% block content %}
+    
+    <style>
+        /* Filter/Select box styling */
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: white;
+        }
+
+        .filter-select:hover {
+            border-color: #007bff;
+        }
+
+        .filter-select:focus {
+            border-color: #1087ff; 
+            box-shadow: 0 0 0 0.2rem rgba(16, 135, 255, 0.25);
+            outline: none;
+        }
+        
+        /* Issue Card Hover Effect */
+        .issue-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: box-shadow 0.3s, transform 0.3s;
+            background-color: white;
+            display: block; /* To make the whole div clickable/hoverable */
+            text-decoration: none; /* Remove underline from the anchor tag */
+            color: inherit;
+        }
+
+        .issue-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Pagination Link Styling */
+        .pagination a, .pagination span {
+            padding: 10px 15px;
+            margin: 0 5px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .pagination a {
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+        }
+
+        .pagination a:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .pagination span.disabled {
+            background-color: #f8f9fa;
+            color: #aaa;
+            border: 1px solid #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+    <div style="margin-bottom: 20px; padding: 15px; background-color: #e9ecef; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);">
+        <form method="get" action="{% url 'issue_list' %}" style="display: flex; gap: 30px; align-items: center;">
+            
+            {% if request.GET.q %}
+                <input type="hidden" name="q" value="{{ request.GET.q }}">
+            {% endif %}
+
+            <div>
+                <label for="status-filter" style="font-weight: bold;">Filter by Status:</label>
+                <select name="status" id="status-filter" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for code, name in status_choices %}
+                        <option value="{{ code }}" {% if code == selected_status %}selected{% endif %}>
+                            {{ name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="category-filter" style="font-weight: bold;">Filter by Category:</label>
+                <select name="category" id="category-filter" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for code, name in category_choices %}
+                        <option value="{{ code }}" {% if code == selected_category %}selected{% endif %}>
+                            {{ name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+
+    {% for issue in issues %}
+    <a href="{% url 'issue_detail' pk=issue.pk %}" class="issue-card">
+        <h2>{{ issue.title }}</h2>
+        
+        <p><strong>Category:</strong> {{ issue.get_category_display }}</p>
+        
+        <p style="margin-bottom: 5px;">
+            <strong>Status:</strong> 
+            <span class="status-{{ issue.status|lower }}">{{ issue.get_status_display }}</span>
+        </p>
+
+        <p><small style="color: #6c757d;">Reported by: {{ issue.reported_by.username }} on {{ issue.reported_at|date:"M d, Y" }}</small></p>
+        
+        <p style="color: #007bff; font-weight: bold; margin-top: 10px;">View Details & Map &raquo;</p>
+    </a>
+    {% empty %}
+    <p style="text-align: center; padding: 20px; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">
+        🥳 Search filters se match karta hua abhi tak koi issue report nahi hua hai! Aap pehla issue report kar sakte hain.
+    </p>
+    {% endfor %}
+
+    {% if issues.has_other_pages %}
+        <div class="pagination" style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+            {% with query_string="&status="|add:selected_status|default:''|add:"&category="|add:selected_category|default:''|add:"&q="|add:query|default:'' %}
+
+                {% if issues.has_previous %}
+                    <a href="?page={{ issues.previous_page_number }}{{ query_string }}">&laquo; Previous</a>
+                {% else %}
+                    <span class="disabled">&laquo; Previous</span>
+                {% endif %}
+
+                <span style="margin: 0 15px;">
+                    Page **{{ issues.number }}** of **{{ issues.paginator.num_pages }}**.
+                </span>
+
+                {% if issues.has_next %}
+                    <a href="?page={{ issues.next_page_number }}{{ query_string }}">Next &raquo;</a>
+                {% else %}
+                    <span class="disabled">Next &raquo;</span>
+                {% endif %}
+
+            {% endwith %}
+        </div>
+    {% endif %}
+
+{% endblock content %}

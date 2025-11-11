@@ -1,0 +1,21 @@
+# Django
+# Python-related files and folders to ignore
+
+# Environment Variables (Contains SECRET_KEY, Database URL) - MOST CRITICAL
+.env
+
+# Virtual Environment Folder (Aapka "venv" folder)
+/venv/
+*.pyc
+__pycache__/
+
+# Database file (Agar aap local SQLite use kar rahe hain)
+db.sqlite3
+
+# Deployment/Static files
+/staticfiles/
+/media/
+
+# IDE/Editor files (Optional, but good practice)
+.vscode/
+.idea/

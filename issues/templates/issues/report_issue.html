@@ -1,0 +1,243 @@
+{% extends "issues/base.html" %}
+{% block title %}Report Issue{% endblock %}
+{% block page_heading %}Report a New City Issue{% endblock %}
+
+{% block content %}
+<style>
+/* Font Awesome for icons (For Pro Look) */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
+
+.report-card {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); /* Deeper, subtle shadow */
+    max-width: 900px; /* Max width for central alignment */
+    margin: 0 auto;
+}
+
+/* Form layout - Grid for key fields, better spacing */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for shorter fields */
+    gap: 20px 30px; /* Vertical and horizontal gap */
+    margin-bottom: 20px;
+}
+
+/* Fields that need full width (Description, Photo) */
+.full-width {
+    grid-column: 1 / -1; /* Spans all columns */
+}
+
+/* General Input Styling (Overriding base.html slightly) */
+form p {
+    margin: 0;
+}
+
+form label {
+    display: block;
+    font-weight: 600; 
+    color: #343a40; /* Darker label color */
+    margin-bottom: 8px;
+    font-size: 1.05em;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="file"],
+form textarea,
+form select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-color: #f8f9fa; /* Light input background */
+    font-size: 1em;
+}
+
+form input:focus,
+form textarea:focus,
+form select:focus {
+    border-color: #1087ff; /* Primary Blue focus */
+    box-shadow: 0 0 0 0.2rem rgba(16, 135, 255, 0.25);
+    outline: none;
+    background-color: #ffffff;
+}
+
+/* Geolocation Status Styling */
+#location-status {
+    padding: 15px 20px;
+    margin-top: 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    transition: all 0.5s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 1.1em;
+}
+
+/* Status Colors: JS will add these classes */
+.status-pending {
+    background-color: #fff3cd; /* Yellow alert background */
+    color: #856404; /* Darker yellow text */
+}
+
+.status-success {
+    background-color: #d4edda; /* Green alert background */
+    color: #155724;
+}
+
+.status-error {
+    background-color: #f8d7da; /* Red alert background */
+    color: #721c24;
+}
+
+/* Submit Button Styling */
+#submit-btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 30px;
+    background-color: #28a745; /* Green as the primary submit color */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: background-color 0.3s, opacity 0.3s, transform 0.1s;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+}
+
+#submit-btn:hover:not([disabled]) {
+    background-color: #1e7e34;
+    transform: translateY(-2px);
+}
+
+#submit-btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.text-muted {
+    font-size: 0.9em;
+    color: #6c757d;
+    display: block; /* Help text ko naye line par dikhayein */
+    margin-top: 5px;
+}
+</style>
+
+<div class="report-card">
+    <form method="post" enctype="multipart/form-data" id="report-form">
+        {% csrf_token %}
+        
+        <div class="form-grid">
+            {% for field in form %}
+                {% if field.field.widget.input_type == 'hidden' %}
+                    {{ field }}
+                {% elif field.name == 'description' or field.name == 'photo' %}
+                    <div class="full-width">
+                        <p>
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="text-muted"><i class="fas fa-lightbulb"></i> {{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <span style="color: red; display: block; margin-top: 5px;">* {{ error }}</span>
+                            {% endfor %}
+                        </p>
+                    </div>
+                {% else %}
+                    <p>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="text-muted"><i class="fas fa-lightbulb"></i> {{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <span style="color: red; display: block; margin-top: 5px;">* {{ error }}</span>
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <p id="location-status" class="status-pending">
+            <i class="fas fa-spinner fa-spin"></i> 📍 Fetching location...
+        </p>
+
+        <button type="submit" id="submit-btn" disabled>
+            <i class="fas fa-paper-plane"></i> Submit Report
+        </button>
+    </form>
+</div>
+
+<script>
+    // --- JAVASCRIPT FOR GEOLOCATION (UNCHANGED LOGIC, ONLY CLASS MODIFIED) ---
+    const latField = document.getElementById('id_latitude');
+    const lonField = document.getElementById('id_longitude');
+    const statusDiv = document.getElementById('location-status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function getLocation() {
+    if (navigator.geolocation) {
+        // High Accuracy options for better results (especially in Indore!)
+        navigator.geolocation.getCurrentPosition(showPosition, showError, {
+            enableHighAccuracy: true, 
+            timeout: 5000, 
+            maximumAge: 300000 
+        });
+    } else { 
+        statusDiv.innerHTML = "❌ Geolocation is not supported by this browser. (Location will be null)";
+        // Add error class for visual feedback
+        statusDiv.classList.remove('status-pending');
+        statusDiv.classList.add('status-error');
+        submitBtn.disabled = false;
+    }
+}
+
+    function showPosition(position) {
+        latField.value = position.coords.latitude;
+        lonField.value = position.coords.longitude;
+        
+        // Dynamic status update
+        statusDiv.innerHTML = "✅ Location Fetched! (Lat: " + position.coords.latitude.toFixed(4) + ", Lon: " + position.coords.longitude.toFixed(4) + ")";
+        statusDiv.classList.remove('status-pending', 'status-error');
+        statusDiv.classList.add('status-success');
+
+        submitBtn.disabled = false; 
+    }
+
+    function showError(error) {
+        let message = "";
+        let icon = "❌";
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                message = "Permission Denied: Allow location access to mark the issue map.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                message = "Location Unavailable: Check device settings or network.";
+                break;
+            case error.TIMEOUT:
+                message = "Location Timeout: Could not get a fix on your location.";
+                break;
+            case error.UNKNOWN_ERROR:
+                message = "An unknown error occurred.";
+                break;
+        }
+        
+        // Dynamic status update
+        statusDiv.innerHTML = `${icon} Location Error: ${message}. (Proceeding without GPS)`;
+        statusDiv.classList.remove('status-pending', 'status-success');
+        statusDiv.classList.add('status-error');
+        
+        submitBtn.disabled = false; 
+    }
+
+    window.onload = getLocation;
+</script>
+{% endblock content %}

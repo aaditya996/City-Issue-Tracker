@@ -1,0 +1,65 @@
+{% extends "issues/base.html" %}
+{% block title %}My Issues{% endblock %}
+{% block page_heading %}{{ title }}{% endblock %}
+
+{% block content %}
+    
+    {% if issues.has_other_pages %}
+    <div class="pagination" style="text-align: center; margin-top: 10px; margin-bottom: 20px;">
+        {% if issues.has_previous %}
+            <a href="?page={{ issues.previous_page_number }}" style="padding: 8px 12px; border: 1px solid #007bff; text-decoration: none; border-radius: 4px; background-color: #007bff; color: white;">&laquo; Previous</a>
+        {% else %}
+            <span style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; color: #aaa;">&laquo; Previous</span>
+        {% endif %}
+
+        <span style="margin: 0 15px;">
+            Page {{ issues.number }} of {{ issues.paginator.num_pages }}.
+        </span>
+
+        {% if issues.has_next %}
+            <a href="?page={{ issues.next_page_number }}" style="padding: 8px 12px; border: 1px solid #007bff; text-decoration: none; border-radius: 4px; background-color: #007bff; color: white;">Next &raquo;</a>
+        {% else %}
+            <span style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; color: #aaa;">Next &raquo;</span>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% for issue in issues %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 4px;">
+        <h2><a href="{% url 'issue_detail' pk=issue.pk %}" style="text-decoration: none; color: #007bff;">{{ issue.title }}</a></h2>
+        
+        <p><strong>Category:</strong> {{ issue.get_category_display }}</p>
+        
+        <p>
+            <strong>Status:</strong> 
+            <span class="status-{{ issue.status|lower }}">{{ issue.get_status_display }}</span>
+        </p>
+
+        <p><small>Reported on: {{ issue.reported_at|date:"M d, Y" }}</small></p>
+        
+        <a href="{% url 'issue_detail' pk=issue.pk %}" style="display: inline-block; margin-top: 5px; color: #007bff;">View Details & Status</a>
+    </div>
+    {% empty %}
+    <p>❌ Aapne abhi tak koi issue report nahi kiya hai.</p>
+    {% endfor %}
+    
+    
+    {% if issues.has_other_pages %}
+        <div class="pagination" style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+            {% if issues.has_previous %}
+                <a href="?page={{ issues.previous_page_number }}" style="padding: 8px 12px; border: 1px solid #007bff; text-decoration: none; border-radius: 4px; background-color: #007bff; color: white;">&laquo; Previous</a>
+            {% else %}
+                <span style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; color: #aaa;">&laquo; Previous</span>
+            {% endif %}
+
+            <span style="margin: 0 15px;">
+                Page {{ issues.number }} of {{ issues.paginator.num_pages }}.
+            </span>
+
+            {% if issues.has_next %}
+                <a href="?page={{ issues.next_page_number }}" style="padding: 8px 12px; border: 1px solid #007bff; text-decoration: none; border-radius: 4px; background-color: #007bff; color: white;">Next &raquo;</a>
+            {% else %}
+                <span style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; color: #aaa;">Next &raquo;</span>
+            {% endif %}
+        </div>
+    {% endif %}
+    {% endblock content %}

@@ -1,0 +1,167 @@
+{% extends "issues/base.html" %}
+{% block title %}Edit Profile{% endblock %}
+{% block page_heading %}My Profile Details{% endblock %}
+
+{% block content %}
+<style>
+/* --- DEDICATED PROFILE CSS: ULTRA PRO LEVEL --- */
+.profile-container {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start; /* Items top se align hon */
+}
+
+.profile-card {
+    flex: 1;
+    padding: 30px; /* Thoda zyada padding */
+    border: 1px solid #e9ecef;
+    border-radius: 12px; /* Smooth rounded corners */
+    background-color: #ffffff; /* White background */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Subtle depth */
+    position: sticky; /* Sticky element on scroll */
+    top: 90px; /* Navbar ke neeche position karein */
+}
+
+.profile-card h3 {
+    border-bottom: 2px solid #007bff; /* Blue underline */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: #343a40;
+}
+
+.profile-img-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px auto;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #007bff; /* Primary color ring */
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); /* Outer shadow */
+}
+
+.profile-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-img {
+    width: 100%;
+    height: 100%;
+    background-color: #adb5bd; /* Default gray */
+    color: white;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.update-form-section {
+    flex: 2;
+    padding: 30px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.update-form-section h3 {
+    border-bottom: 2px solid #28a745; /* Green underline for update */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: #343a40;
+}
+
+.update-button {
+    padding: 12px 25px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.4);
+}
+
+.update-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+</style>
+
+<div class="profile-container">
+    
+    <div class="profile-card">
+        <h3>Current Profile <span style="font-size: 0.8em; color: #6c757d;">(Read Only)</span></h3>
+        
+        <div class="profile-img-container">
+            {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="{{ user.username }} Profile">
+            {% else %}
+                <div class="placeholder-img">
+                    {{ user.username.0|upper }} 
+                </div>
+            {% endif %}
+        </div>
+
+        <p><strong><i style="color:#007bff;" class="fas fa-user-circle"></i> Username:</strong> {{ user.username }}</p>
+        <p><strong><i style="color:#007bff;" class="fas fa-id-card"></i> Name:</strong> {{ user.first_name|default:"N/A" }} {{ user.last_name|default:"N/A" }}</p>
+        <p><strong><i style="color:#007bff;" class="fas fa-envelope"></i> Email:</strong> {{ user.email|default:"N/A" }}</p>
+        
+        <hr style="border-top: 1px dashed #ced4da; margin: 15px 0;">
+        
+        <p><strong><i style="color:#007bff;" class="fas fa-venus-mars"></i> Gender:</strong> {{ profile.get_gender_display|default:"N/A" }}</p>
+        <p><strong><i style="color:#007bff;" class="fas fa-calendar-alt"></i> Age:</strong> {{ profile.age|default:"N/A" }}</p>
+        <p><strong><i style="color:#007bff;" class="fas fa-phone"></i> Contact:</strong> {{ profile.contact_number|default:"N/A" }}</p>
+        <p><strong><i style="color:#007bff;" class="fas fa-map-marker-alt"></i> Address:</strong> {{ profile.address|default:"N/A" }}</p>
+    </div>
+
+    <div class="update-form-section">
+        <h3>Edit Profile Information</h3>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+
+            <h4 style="color: #007bff; margin-top: 0;"><i class="fas fa-user-edit"></i> Account Details:</h4>
+            {% for field in form %}
+                {% if field.name in "first_name,last_name,email" %}
+                    <p>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <span style="color: red; display: block; margin-top: 5px; font-size: 0.9em;">* {{ error }}</span>
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            {% endfor %}
+
+            <hr style="border-top: 1px dashed #ced4da; margin: 25px 0;">
+            
+            <h4 style="color: #28a745;"><i class="fas fa-info-circle"></i> Personal Details:</h4>
+            {% for field in form %}
+                {% if field.name not in "first_name,last_name,email" %}
+                    <p>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <span style="color: red; display: block; margin-top: 5px; font-size: 0.9em;">* {{ error }}</span>
+                        {% endfor %}
+                    </p>
+                {% endif %}
+            {% endfor %}
+
+            <div style="margin-top: 30px; text-align: right;">
+                <button type="submit" class="update-button">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,160 @@
+{% extends "issues/base.html" %}
+
+{% block title %}User Login{% endblock %}
+
+{% block page_heading %}Login to City Tracker{% endblock %}
+
+{% block content %}
+    
+    <style>
+        /* General Body and Container Styling */
+        body {
+            background-color: #f8f9fa; /* Light grey background */
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 40px auto; /* Increased top/bottom margin for better spacing */
+            padding: 30px;
+            border: none; /* Removed default border for a cleaner look */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle, professional shadow */
+            background-color: #ffffff; /* White background for the form box */
+        }
+        
+        /* Error Message Styling */
+        .error-message {
+            color: #c0392b; /* Darker red for text */
+            padding: 12px;
+            border: 1px solid #e74c3c; /* Professional red border */
+            background-color: #fde8e8; /* Very light red background */
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        /* Form Field Styling */
+        .login-container p {
+            margin-bottom: 15px;
+        }
+
+        .login-container label {
+            display: block; /* Label on its own line */
+            margin-bottom: 5px;
+            font-weight: 600; /* Semi-bold label */
+            color: #343a40; /* Darker text for labels */
+            font-size: 0.95em;
+        }
+
+        .login-container input[type="text"], 
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da; /* Light grey border */
+            border-radius: 6px;
+            box-sizing: border-box; /* Include padding/border in element's total width/height */
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .login-container input[type="text"]:focus, 
+        .login-container input[type="password"]:focus {
+            border-color: #007bff; /* Blue border on focus */
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Subtle blue glow */
+            outline: none; /* Remove default focus outline */
+        }
+        
+        /* Field Error Styling */
+        .field-error {
+            color: #e74c3c; /* Error red for individual fields */
+            font-size: 0.85em;
+            display: block; /* Ensure error is on a new line */
+            margin-top: 5px;
+        }
+
+        /* Submit Button Styling */
+        .login-button {
+            width: 100%; /* Full width button */
+            padding: 12px 15px;
+            background-color: #007bff; /* Primary blue color */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .login-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer Links (Forgot Password & Sign Up) */
+        .forgot-password, .sign-up-link {
+            text-align: left;
+            margin-top: 15px;
+        }
+        
+        .sign-up-link {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.95em;
+            color: #6c757d; /* Muted grey text */
+        }
+
+        .sign-up-link a, .forgot-password a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .sign-up-link a:hover, .forgot-password a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        
+    </style>
+    
+    <div class="login-container">
+        
+        {% if form.errors %}
+            <p class="error-message">
+                Your username and password didn't match. Please try again.
+            </p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <input type="hidden" name="next" value="{{ next }}" />
+            
+            {% for field in form %}
+                <p>
+                    {{ field.label_tag }} <br>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </p>
+            {% endfor %}
+
+            <button type="submit" class="login-button">
+                Login
+            </button>
+            
+            <p class="forgot-password">
+                <small><a href="{% url 'password_reset' %}">Forgot password?</a></small>
+            </p>
+        </form>
+    </div>
+
+    <p class="sign-up-link">
+        Don't have an account? <a href="{% url 'register' %}">Sign Up here</a>.
+    </p>
+
+{% endblock content %}

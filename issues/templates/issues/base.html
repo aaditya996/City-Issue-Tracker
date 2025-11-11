@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Issue Tracker | {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"> 
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            /* Sticky effect */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Navbar ko shadow diya */
+        }
+
+        /* --- Navbar Links --- */
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            padding: 5px 10px; 
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .navbar a:hover {
+            background-color: #555;
+        }
+
+        /* --- Search Bar Styling --- */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            margin-left: auto; /* Push to the center-left */
+            margin-right: 20px;
+        }
+
+        .search-bar input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+            width: 300px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-bar input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        
+        .search-bar button {
+            padding: 8px 12px;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .search-bar button:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        /* --- General Content Container --- */
+        .container {
+            width: 80%;
+            max-width: 1200px; /* Max width set */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- General Input and Button Styles (for hover) --- */
+        
+        /* General styling for form inputs (input, textarea, select) */
+        input[type="text"], 
+        input[type="number"], 
+        input[type="email"], 
+        input[type="password"], 
+        input[type="file"], 
+        textarea, 
+        select {
+            border: 1px solid #ced4da;
+            padding: 10px;
+            border-radius: 4px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: #1087ff; 
+            box-shadow: 0 0 0 0.2rem rgba(16, 135, 255, 0.25);
+            outline: none;
+        }
+        
+        /* General Button Styling */
+        button[type="submit"], .btn {
+            background-color: #28a745; /* Green color for submit */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button[type="submit"]:hover, .btn:hover {
+            background-color: #1e7e34;
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+
+        /* --- STATUS STYLES --- */
+        
+        /* Reported (REP) - Orange */
+        .status-rep {
+            color: #f0ad4e;
+            font-weight: bold;
+        }
+
+        /* Under Review (REV) - Light Blue/Cyan */
+        .status-rev {
+            color: #5bc0de;
+            font-weight: bold;
+        }
+
+        /* In Progress (IPR) - Teal */
+        .status-ipr {
+            color: #008080; 
+            font-weight: bold;
+        }
+        
+        /* Resolved (RES) - Green */
+        .status-res {
+            color: #5cb85c;
+            font-weight: bold;
+        }
+
+        /* Rejected (REJ) - Red */
+        .status-rej {
+            color: #d9534f; 
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+    <a href="{% url 'issue_list' %}">🏡 **City Issue Tracker**</a>
+    
+    <div class="search-bar">
+        <form method="get" action="{% url 'issue_list' %}" style="display: flex;">
+            <input type="text" name="q" placeholder="Search issues by Title or Description..." 
+                    value="{{ request.GET.q|default:'' }}">
+            <button type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+    
+    <div> 
+            {% if user.is_authenticated %}
+            <a href="{% url 'report_issue' %}">➕ Report Issue</a>
+            <a href="{% url 'my_issues' %}">My Issues</a>
+            
+            <a href="{% url 'profile_edit' %}" style="font-weight: bold; color: #b7e4c7;">👤 {{ user.username }}</a>
+            
+            <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Sign Up</a>
+            {% endif %}
+        </div>
+</div>
+    <div class="container">
+        {% if messages %}
+            <ul class="messages" style="list-style: none; padding: 0;">
+                {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %} 
+                    style="padding: 10px; margin-bottom: 10px; border-radius: 4px; background-color: #d4edda; color: #155724;">
+                    {{ message }}
+                </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        
+        <h1>{% block page_heading %}{% endblock %}</h1>
+        
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+
+</html>

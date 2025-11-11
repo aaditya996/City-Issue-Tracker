@@ -1,0 +1,327 @@
+{% extends "issues/base.html" %}
+{% block title %}{{ issue.title }}{% endblock %}
+{% block page_heading %}Issue Detail: {{ issue.title }}{% endblock %}
+
+{% block content %}
+<style>
+    /* 🌑 Dark & Teal (Cyan) 3D/Glassy Color Palette */
+    :root {
+        --base-bg-color: #1a1a1d; /* Very Dark Base */
+        --card-bg-light: #2c2c31; /* Slightly Lighter Card Background */
+        --primary-text-color: #5147c1; /* White/Light Gray Text */
+        --secondary-text-color: #a0a0a0; /* Subdued Gray Text */
+        --accent-color: #00bcd4; /* Bright Cyan/Teal for Emphasis */
+        --success-color: #4caf50; /* Green for success */
+    }
+
+    /* --- Global & Background --- */
+    body {
+        font-family: 'Roboto', sans-serif;
+        /* Simple dark background */
+        background-color: var(--base-bg-color); 
+        color: var(--primary-text-color);
+        line-height: 1.6;
+        min-height: 100vh;
+        padding: 0;
+    }
+
+    #content {
+        max-width: 950px;
+        margin: 40px auto;
+        padding: 20px;
+        background: none; 
+    }
+    
+    .page-header {
+        color: var(--accent-color);
+        font-weight: 800;
+        font-size: 2.2rem;
+        text-shadow: 0 0 15px rgba(0, 188, 212, 0.4); /* Neon Glow */
+        margin-bottom: 30px;
+        border-bottom: 3px solid var(--accent-color);
+        padding-bottom: 10px;
+    }
+
+    h3 {
+        color: var(--accent-color);
+        font-size: 1.6rem;
+        margin-top: 35px;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+
+    /* --- 3D/Glassy Cards --- */
+    .detail-card {
+        background: var(--card-bg-light);
+        padding: 25px;
+        margin-bottom: 25px;
+        border-radius: 12px;
+        /* Stronger, glowing shadow for 3D effect */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 
+                    0 0 10px rgba(0, 188, 212, 0.2); /* Subtle teal glow */
+        border: 1px solid rgba(255, 255, 255, 0.05); /* Very subtle light edge */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .detail-card:hover {
+        /* Hover: Lift and glow */
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 
+                    0 0 25px var(--accent-color); 
+    }
+
+    /* --- Detail Grid & Typography --- */
+    .issue-grid p {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Faint separator */
+        margin: 0;
+        transition: background-color 0.2s;
+    }
+    
+    .issue-grid p:hover {
+        background-color: rgba(255, 255, 255, 0.03); /* Slight highlight on hover */
+    }
+
+    .issue-grid strong {
+        font-weight: 600;
+        color: var(--primary-text-color);
+        flex-basis: 35%; 
+    }
+    
+    .issue-grid span {
+        color: var(--secondary-text-color);
+        font-weight: 400;
+    }
+
+    /* --- Status Badges --- */
+    span[class^="status-"] {
+        display: inline-block;
+        padding: 6px 15px;
+        border-radius: 20px; 
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--primary-text-color);
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5); /* Raised pill effect */
+    }
+    
+    .status-new { background-color: #00bcd4; } /* Teal */
+    .status-pending { background-color: #ff9800; } /* Amber */
+    .status-resolved { background-color: var(--success-color); } /* Green */
+    .status-closed, .status-rejected { background-color: #f44336; } /* Red */
+
+    /* --- Photo Proof (Limited Size) --- */
+    img[alt="{{ issue.title }}"] {
+        display: block;
+        margin: 15px auto; 
+        max-width: 380px !important; /* Image size control */
+        height: auto;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 2px solid var(--accent-color); /* Teal border */
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8);
+        transition: transform 0.3s ease;
+    }
+    img[alt="{{ issue.title }}"]:hover {
+        transform: scale(1.05) rotate(-1deg); 
+    }
+
+    /* --- Location Map (Inset/Sunken) --- */
+    #mapid {
+        height: 300px; 
+        width: 100%;
+        border-radius: 10px;
+        margin-top: 15px;
+        /* Sunken effect */
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.9);
+        border: 1px solid rgba(0, 188, 212, 0.3);
+    }
+
+    /* --- Staff Update Form --- */
+    .staff-update-section {
+        background: rgba(255, 255, 255, 0.05); 
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 188, 212, 0.3); /* Teal border */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        margin-top: 30px;
+    }
+    
+    .staff-update-section h3 {
+        color: var(--success-color);
+    }
+
+    form button {
+        background: linear-gradient(180deg, var(--success-color), #388e3c);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6); 
+        transition: all 0.2s ease;
+    }
+
+    form button:hover {
+        background: linear-gradient(180deg, #388e3c, var(--success-color));
+        transform: translateY(-2px); 
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.8), 0 0 15px rgba(76, 175, 80, 0.7); /* Green glow */
+    }
+
+    form input[type="text"], form select, form textarea {
+        width: 100%;
+        padding: 10px 15px;
+        margin-top: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        background: rgba(0, 0, 0, 0.3); 
+        color: var(--primary-text-color);
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8); /* Deep inset */
+    }
+    
+    form input:focus, form select:focus, form textarea:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 188, 212, 0.7); /* Teal glow on focus */
+    }
+
+    hr {
+        border: 0;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 30px 0;
+    }
+</style>
+
+<div class="detail-card">
+    <h3>Issue Details</h3>
+    <div class="issue-grid">
+        <p><strong>Reported By:</strong> <span>{{ issue.reported_by.username }}</span></p>
+        <p><strong>Reported On:</strong> <span>{{ issue.reported_at|date:"M d, Y, h:i A" }}</span></p>
+        <p><strong>Category:</strong> <span>{{ issue.get_category_display }}</span></p>
+        <p>
+            <strong>Current Status:</strong> 
+            <span class="status-{{ issue.status|lower }}">{{ issue.get_status_display }}</span>
+        </p>
+    </div>
+</div>
+
+<div class="detail-card">
+    <h3>Description</h3>
+    <p>{{ issue.description }}</p>
+</div>
+
+
+{% if issue.photo %}
+    <div class="detail-card">
+        <h3>Photo Proof:</h3>
+        <img src="{{ issue.photo.url }}" alt="{{ issue.title }}" style="max-width: 400px; height: auto; border: 1px solid #ccc;">
+    </div>
+{% endif %}
+
+{% if issue.latitude and issue.longitude %}
+    <div class="detail-card">
+        <h3>Location:</h3>
+        <p>Coordinates: {{ issue.latitude }}, {{ issue.longitude }}</p>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+        <div id="mapid" style="height: 300px; width: 100%;"></div>
+
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+        <script>
+        // Latitude aur Longitude values ko direct use kiya gaya hai
+        var latitude = {{ issue.latitude }};
+        var longitude = {{ issue.longitude }};
+
+        // Yeh check lagana zaroori hai ki coordinates numbers hain, null nahi.
+        if (typeof latitude === 'number' && typeof longitude === 'number' && latitude !== null && longitude !== null) {
+            
+            // Map Initialize
+            var map = L.map('mapid').setView([latitude, longitude], 15); // 15 is zoom level
+
+            // Tile Layer (Map visuals)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Marker at Issue Location
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup("<b>Issue Location</b>")
+                .openPopup();
+        } 
+        // Agar coordinates nahi mile, toh Map initialize nahi hoga aur koi error bhi nahi aayega.
+    </script>
+    </div>
+{% else %}
+    <p class="detail-card">Location data is not available for this issue.</p>
+{% endif %}
+
+<hr>
+
+{% if request.user.is_staff %}
+    <hr>
+    <h3>🛠️ Official Status Update:</h3>
+    <form method="POST">
+        {% csrf_token %}
+        {{ status_form.as_p }}
+        
+        <button type="submit" name="status_update" style="background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Update Status</button>
+    </form>
+{% endif %}
+
+<hr>
+
+<div id="comments-section" style="margin-top: 30px;">
+    <h2>💬 Comments ({{ comments.count }})</h2>
+
+   {% if user.is_authenticated %}
+    <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; background-color: #f9f9f9;">
+        <form method="post">
+            {% csrf_token %}
+            
+            {{ comment_form.text }} 
+            
+            <button type="submit" name="post_comment" style="margin-top: 10px; padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Post Comment
+            </button>
+        </form>
+    </div>
+{% else %}
+    <p style="padding: 10px; background-color: #ffe0b2; border-radius: 4px;">
+        <a href="{% url 'login' %}?next={{ request.path }}" style="font-weight: bold; color: #e65100;">Login</a> to post a comment.
+    </p>
+{% endif %}
+
+    {% if comments %}
+        {% for comment in comments %}
+            <div style="border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 6px; background-color: white;">
+                <p style="margin: 0 0 5px 0;">
+                    <strong>
+                        {{ comment.user.username }} 
+                        {% if comment.user.is_staff %}
+                            <span style="color: green; font-size: 0.9em;">(Official Staff)</span>
+                        {% endif %}
+                    </strong> 
+                    <small style="color: #6c757d; float: right;">{{ comment.created_at|date:"M d, Y, h:i A" }}</small>
+                </p>
+                <p style="margin: 0; white-space: pre-wrap;">{{ comment.text }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>Be the first to comment on this issue!</p>
+    {% endif %}
+
+</div>
+
+{% endblock content %}
