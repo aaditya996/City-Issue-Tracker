@@ -1,0 +1,7 @@
+# requirements.txt
+Django== 3.2.25  # Aap jo bhi version use kar rahe hain
+gunicorn       # Production web server (Render Start Command ke liye zaroori)
+python-decouple # Config aur SECRET_KEY ke liye
+dj-database-url # Postgresql DATABASE_URL ko handle karne ke liye
+Pillow         # ImageField (profile_image aur issue photo) ke liye
+psycopg2-binary # PostgreSQL database se connect hone ke liye
